@@ -30,3 +30,26 @@ uv run aseprite-sheet-combiner test1.aseprite test2.aseprite \
 - Python 3.8+
 - [uv](https://docs.astral.sh/uv/) package manager
 - [Aseprite](https://www.aseprite.org/) (installed and accessible via PATH or specified with `--aseprite`)
+
+## Why does this exist?
+Aseprite sort of has CLI options for handling multiple files:
+```
+aseprite --batch first.aseprite second.aseprite --data=data.json --list-tags --list-slices
+```
+
+but it merges the data into an unusable mess:
+```json
+"frameTags": [
+  { "name": "Idle", "from": 0, "to": 1, "direction": "forward", "color": "#000000ff" },
+  { "name": "Walk", "from": 2, "to": 3, "direction": "forward", "color": "#000000ff" },
+  { "name": "Idle", "from": 0, "to": 1, "direction": "forward", "color": "#000000ff" },
+  { "name": "Walk", "from": 2, "to": 3, "direction": "forward", "color": "#000000ff" }
+],
+"slices": [
+  { "name": "head", "color": "#0000ffff", "data": "walk frame 1", "keys": [{ "frame": 0, "bounds": {"x": 13, "y": 18, "w": 25, "h": 22 } }] }
+]
+```
+
+There's no way to know which tag or slice belonged to which input aseprite file.
+
+This utility merges the **images** into a spritesheet but keeps the frame/tag/slice JSON separate and corrects the coordinates to point at the final spritesheet locations.
