@@ -7,10 +7,26 @@ This lets you have loose `.aseprite` files for your assets but still combine the
 To combine multiple files:
 
 ```bash
-aseprite-sheet-combiner first.aseprite second.aseprite --output-img final.png --output-data-folder ./output --aseprite /bin/aseprite
+aseprite-sheet-combiner resources/first.aseprite second.aseprite --output-img assets/img/sprites.png --output-data-folder assets/animations`
 ```
 
-This will give you a combined png (`final.png`) and a json file for each input file (`./output/first.json` and `./output/second.json`). Each output JSON preserves the full structure from Aseprite's export (frames, meta, frameTags, slices, etc.) with frame coordinates updated to reference the combined spritesheet.
+This will give you a combined png (`assets/img/sprites.png`) and a json file for each input file (`./assets/animations/first.json` and `./assets/animations/second.json`).
+
+Each output JSON preserves the full structure from Aseprite's export (frames, meta, frameTags, slices, etc.) with frame coordinates updated to reference the combined spritesheet.
+
+```
+├── assets
+│   ├── animations
+│   │   ├── first.json
+│   │   └── second.json
+│   └── img
+│       └── sprites.png
+└── resources
+    ├── first.aseprite
+    └── second.aseprite
+```
+
+Try it with [peachy 🍑](https://github.com/josh-perry/peachy) and the LOVE framework!
 
 ### Arguments
 - `input_files` - One or more `.aseprite` files to combine (positional arguments)
