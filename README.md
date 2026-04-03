@@ -7,10 +7,19 @@ This lets you have loose `.aseprite` files for your assets but still combine the
 To combine multiple files:
 
 ```bash
-aseprite-sheet-combiner resources/first.aseprite second.aseprite --output-img assets/img/sprites.png --output-data-folder assets/animations`
+aseprite-sheet-combiner resources/first.aseprite second.aseprite --output-img assets/img/sprites.png --output-data-folder assets/animations
 ```
 
 This will give you a combined png (`assets/img/sprites.png`) and a json file for each input file (`./assets/animations/first.json` and `./assets/animations/second.json`).
+
+If you want a different metadata extension pass `--output-extension`:
+
+```bash
+aseprite-sheet-combiner resources/first.aseprite second.aseprite \
+  --output-img assets/img/sprites.png \
+  --output-data-folder assets/animations \
+  --output-extension .anim
+```
 
 Each output JSON preserves the full structure from Aseprite's export (frames, meta, frameTags, slices, etc.) with frame coordinates updated to reference the combined spritesheet.
 
@@ -32,6 +41,7 @@ Try it with [peachy 🍑](https://github.com/josh-perry/peachy) and the LOVE fra
 - `input_files` - One or more `.aseprite` files to combine (positional arguments)
 - `--output-img`, `-i` - Output .png path for the combined spritesheet (required)
 - `--output-data-folder`, `-d` - Output directory for individual JSON metadata files (required)
+- `--output-extension`, `-e` - File extension for exported metadata files (optional - defaults to `.json`)
 - `--aseprite` - Path to Aseprite binary (optional - defaults to `aseprite` from PATH)
 
 ## Development
@@ -39,7 +49,8 @@ Try it with [peachy 🍑](https://github.com/josh-perry/peachy) and the LOVE fra
 uv sync
 uv run aseprite-sheet-combiner test1.aseprite test2.aseprite \
   --output-img output.png \
-  --output-data-folder ./data
+  --output-data-folder ./data \
+  --output-extension .anim
 ```
 
 ## Requirements

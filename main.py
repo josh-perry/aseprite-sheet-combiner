@@ -11,6 +11,19 @@ from typing import List
 app = typer.Typer()
 
 
+def normalize_output_extension(extension: str) -> str:
+    normalized = extension.strip()
+
+    if not normalized:
+        print("Error: Output extension cannot be empty", file=sys.stderr)
+        raise typer.Exit(code=1)
+
+    if not normalized.startswith("."):
+        normalized = f".{normalized}"
+
+    return normalized
+
+
 def find_aseprite_binary(aseprite_path: str) -> str:
     binary = shutil.which(aseprite_path)
 
@@ -136,6 +149,11 @@ def main(
         "--output-data-folder", "-d",
         help="Output directory for individual JSON metadata files"
     ),
+    output_extension: str = typer.Option(
+        ".json",
+        "--output-extension", "-e",
+        help="File extension for exported metadata files (default: .json)"
+    ),
     aseprite: str = typer.Option(
         "aseprite",
         "--aseprite",
@@ -143,10 +161,12 @@ def main(
     )
 ) -> None:
     aseprite_bin = find_aseprite_binary(aseprite)
+    output_extension = normalize_output_extension(output_extension)
 
     output_data_folder.mkdir(parents=True, exist_ok=True)
 
     tempdir = Path(tempfile.mkdtemp())
+    print(f"Using temporary directory: {tempdir}")
 
     try:
         combined_json = tempdir / "combined.json"
@@ -158,7 +178,7 @@ def main(
         for input_file in input_files:
             basename = input_file.stem
             individual_json = tempdir / f"{basename}.json"
-            output_json = output_data_folder / f"{basename}.json"
+            output_json = output_data_folder / f"{basename}{output_extension}"
 
             print(f"Processing {input_file.name}...")
 
