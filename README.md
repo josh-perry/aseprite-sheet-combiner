@@ -12,6 +12,8 @@ aseprite-sheet-combiner resources/first.aseprite second.aseprite --output-img as
 
 This will give you a combined png (`assets/img/sprites.png`) and a json file for each input file (`./assets/animations/first.json` and `./assets/animations/second.json`).
 
+Each exported metadata file also gets `meta.image` set to the combined spritesheet path relative to that metadata file, so the JSON can tell you which PNG it belongs to on its own.
+
 If you want a different metadata extension pass `--output-extension`:
 
 ```bash
@@ -22,6 +24,15 @@ aseprite-sheet-combiner resources/first.aseprite second.aseprite \
 ```
 
 Each output JSON preserves the full structure from Aseprite's export (frames, meta, frameTags, slices, etc.) with frame coordinates updated to reference the combined spritesheet.
+
+If you also want an explicit manifest that lists every source `.aseprite`, generated metadata file, and shared output PNG, pass `--output-manifest`:
+
+```bash
+aseprite-sheet-combiner resources/first.aseprite second.aseprite \
+  --output-img assets/img/sprites.png \
+  --output-data-folder assets/animations \
+  --output-manifest assets/animations/manifest.json
+```
 
 ```
 ├── assets
@@ -42,6 +53,7 @@ Try it with [peachy 🍑](https://github.com/josh-perry/peachy) and the LOVE fra
 - `--output-img`, `-i` - Output .png path for the combined spritesheet (required)
 - `--output-data-folder`, `-d` - Output directory for individual JSON metadata files (required)
 - `--output-extension`, `-e` - File extension for exported metadata files (optional - defaults to `.json`)
+- `--output-manifest`, `-m` - Optional JSON manifest mapping exported metadata files to the combined spritesheet
 - `--aseprite` - Path to Aseprite binary (optional - defaults to `aseprite` from PATH)
 
 ## Development

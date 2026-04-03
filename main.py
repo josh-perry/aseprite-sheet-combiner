@@ -1,11 +1,12 @@
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import typer
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List, Optional
 
 
 app = typer.Typer()
@@ -102,12 +103,17 @@ def build_frame_lookup(combined_json_path: Path) -> dict:
         raise typer.Exit(code=1)
 
 
+def make_relative_path(target_path: Path, from_dir: Path) -> str:
+    return Path(os.path.relpath(target_path.resolve(), start=from_dir.resolve())).as_posix()
+
+
 def process_individual_json(
     basename: str,
     individual_json_path: Path,
     frame_lookup: dict,
-    output_path: Path
-) -> None:
+    output_path: Path,
+    output_img: Path
+) -> Dict[str, Any]:
     try:
         with open(individual_json_path, 'r') as f:
             data = json.load(f)
@@ -124,12 +130,35 @@ def process_individual_json(
             combined_frame = frame_lookup[lookup_key]
             data['frames'][frame_idx]['frame'] = combined_frame.get('frame', {})
 
+        data.setdefault('meta', {})['image'] = make_relative_path(output_img, output_path.parent)
+
         with open(output_path, 'w') as f:
             json.dump(data, f, indent=2)
+
+        return data
 
     except (json.JSONDecodeError, IOError) as e:
         print(f"Error: Failed to process {individual_json_path}: {e}", file=sys.stderr)
         raise typer.Exit(code=1)
+
+
+def write_manifest(
+    manifest_path: Path,
+    output_img: Path,
+    entries: List[Dict[str, Any]]
+) -> None:
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+
+    manifest = {
+        'sheet': {
+            'path': output_img.as_posix(),
+            'name': output_img.name,
+        },
+        'entries': entries,
+    }
+
+    with open(manifest_path, 'w') as f:
+        json.dump(manifest, f, indent=2)
 
 
 @app.command()
@@ -154,6 +183,11 @@ def main(
         "--output-extension", "-e",
         help="File extension for exported metadata files (default: .json)"
     ),
+    output_manifest: Optional[Path] = typer.Option(
+        None,
+        "--output-manifest", "-m",
+        help="Optional JSON manifest mapping each exported metadata file to the combined spritesheet"
+    ),
     aseprite: str = typer.Option(
         "aseprite",
         "--aseprite",
@@ -170,6 +204,7 @@ def main(
 
     try:
         combined_json = tempdir / "combined.json"
+        manifest_entries = []
         print(f"Exporting combined spritesheet to {output_img}...")
         export_combined_sheet(aseprite_bin, input_files, output_img, combined_json)
 
@@ -183,9 +218,28 @@ def main(
             print(f"Processing {input_file.name}...")
 
             export_individual_metadata(aseprite_bin, input_file, individual_json)
-            process_individual_json(basename, individual_json, frame_lookup, output_json)
+            data = process_individual_json(
+                basename,
+                individual_json,
+                frame_lookup,
+                output_json,
+                output_img,
+            )
+
+            manifest_entries.append({
+                'source': input_file.as_posix(),
+                'metadata': output_json.as_posix(),
+                'sheet': output_img.as_posix(),
+                'sheet_relative_to_metadata': make_relative_path(output_img, output_json.parent),
+                'frames': len(data.get('frames', [])),
+                'frame_tags': [tag.get('name') for tag in data.get('meta', {}).get('frameTags', [])],
+            })
 
             print(f"    Created {output_json}")
+
+        if output_manifest is not None:
+            write_manifest(output_manifest, output_img, manifest_entries)
+            print(f"Created manifest {output_manifest}")
 
         print("Done!")
 
